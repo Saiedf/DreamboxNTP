@@ -117,13 +117,58 @@ remove_package() {
         return 0
     fi
     say "Removing old package: $CANDIDATE"
-    dpkg -r "$CANDIDATE" || return 1
+    dpkg --purge "$CANDIDATE" || return 1
+}
+
+remove_version_1_0_traces() {
+    say 'Cleaning all known traces of dreambox-ntp-sync 1.0.0...'
+
+    if [ -d /run/systemd/system ] && have systemctl; then
+        systemctl stop merlin-ntp-sync.timer >/dev/null 2>&1 || true
+        systemctl disable merlin-ntp-sync.timer >/dev/null 2>&1 || true
+        systemctl stop merlin-ntp-sync.service >/dev/null 2>&1 || true
+    fi
+
+    for OLD_FILE in \
+        /usr/bin/merlin-ntp-sync \
+        /usr/lib/merlin-ntp-sync.py \
+        /usr/lib/merlin-ntp-sync.pyc \
+        /lib/systemd/system/merlin-ntp-sync.service \
+        /lib/systemd/system/merlin-ntp-sync.timer \
+        /etc/systemd/system/enigma2.service.d/10-merlin-ntp-sync.conf \
+        /etc/rcS.d/S39merlin-ntp-sync \
+        /tmp/merlin-ntp-sync.log \
+        /etc/enigma2/settings.merlin-ntp.tmp \
+        /tmp/dreambox-ntp-sync_1.0.0_all.deb
+    do
+        if [ -e "$OLD_FILE" ] || [ -L "$OLD_FILE" ]; then
+            say "Removing old file: $OLD_FILE"
+            rm -f "$OLD_FILE" || return 1
+        fi
+    done
+
+    for OLD_CACHE in \
+        /usr/lib/__pycache__/merlin-ntp-sync*.pyc \
+        /usr/lib/__pycache__/dreambox-ntp-sync*.pyc
+    do
+        if [ -e "$OLD_CACHE" ]; then
+            rm -f "$OLD_CACHE" || return 1
+        fi
+    done
+
+    if [ -d /run/systemd/system ] && have systemctl; then
+        systemctl daemon-reload || return 1
+        systemctl reset-failed >/dev/null 2>&1 || true
+    fi
+
+    return 0
 }
 
 remove_old_versions() {
     remove_package "$PACKAGE_NAME" || return 1
     remove_package 'enigma2-plugin-systemplugins-dreamtimesync' || return 1
     remove_package 'enigma2-plugin-extensions-dreamtimesync' || return 1
+    remove_version_1_0_traces || return 1
 
     for OLD_PLUGIN_PATH in \
         /usr/lib/enigma2/python/Plugins/SystemPlugins/DreamTimeSync \
