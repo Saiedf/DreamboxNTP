@@ -105,18 +105,17 @@ detect_python() {
     printf '%s' 'not-found'
 }
 
-package_installed() {
+package_registered() {
     CANDIDATE="$1"
-    dpkg-query -W -f='${Status}\n' "$CANDIDATE" 2>/dev/null | grep -q 'install ok installed' && return 0
-    return 1
+    dpkg-query -W "$CANDIDATE" >/dev/null 2>&1
 }
 
 remove_package() {
     CANDIDATE="$1"
-    if ! package_installed "$CANDIDATE"; then
+    if ! package_registered "$CANDIDATE"; then
         return 0
     fi
-    say "Removing old package: $CANDIDATE"
+    say "Purging old or incomplete package: $CANDIDATE"
     dpkg --purge "$CANDIDATE" || return 1
 }
 
@@ -127,6 +126,9 @@ remove_version_1_0_traces() {
         systemctl stop merlin-ntp-sync.timer >/dev/null 2>&1 || true
         systemctl disable merlin-ntp-sync.timer >/dev/null 2>&1 || true
         systemctl stop merlin-ntp-sync.service >/dev/null 2>&1 || true
+        systemctl stop dreambox-ntp-sync.timer >/dev/null 2>&1 || true
+        systemctl disable dreambox-ntp-sync.timer >/dev/null 2>&1 || true
+        systemctl stop dreambox-ntp-sync.service >/dev/null 2>&1 || true
     fi
 
     for OLD_FILE in \
@@ -139,6 +141,13 @@ remove_version_1_0_traces() {
         /etc/rcS.d/S39merlin-ntp-sync \
         /tmp/merlin-ntp-sync.log \
         /etc/enigma2/settings.merlin-ntp.tmp \
+        /usr/bin/dreambox-ntp-sync \
+        /usr/lib/dreambox-ntp-sync.py \
+        /usr/lib/dreambox-ntp-sync.pyc \
+        /lib/systemd/system/dreambox-ntp-sync.service \
+        /lib/systemd/system/dreambox-ntp-sync.timer \
+        /etc/systemd/system/enigma2.service.d/10-dreambox-ntp-sync.conf \
+        /etc/rcS.d/S39dreambox-ntp-sync \
         /tmp/dreambox-ntp-sync_1.0.0_all.deb
     do
         if [ -e "$OLD_FILE" ] || [ -L "$OLD_FILE" ]; then
@@ -231,6 +240,7 @@ show_success_table() {
     say '============================================================='
     printf '= %-57s =\n' 'INSTALLATION COMPLETED SUCCESSFULLY'
     printf '= %-57s =\n' "Dreambox NTP Sync version $PLUGIN_VERSION is now active."
+    printf '= %-57s =\n' 'Plugin created by iet5'
     printf '= %-57s =\n' 'The receiver will reboot automatically in 5 seconds.'
     say '============================================================='
     say ''
@@ -269,6 +279,7 @@ say ''
 say '*************************************************************'
 say '**                         STARTED                         **'
 say '*************************************************************'
+say '** Plugin created by iet5                                  **'
 say "** Plugin       : $PLUGIN_TITLE"
 say "** Version      : $PLUGIN_VERSION"
 say "** Model        : $BOX_MODEL"
