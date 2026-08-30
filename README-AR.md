@@ -31,7 +31,7 @@ wget -qO- "https://raw.githubusercontent.com/Saiedf/DreamboxNTP/main/installer_d
 - إعادة تحميل systemd وتفعيل مؤقت المزامنة.
 - إجراء اختبار مزامنة فوري.
 - التحقق من الإصدار والخدمة بعد التثبيت.
-- عرض رسالة نجاح واحدة ثم إعادة تشغيل Enigma2 تلقائيًا.
+- عرض رسالة نجاح واحدة ثم إعادة تشغيل الرسيفر بالكامل تلقائيًا.
 
 لا يحتاج المستخدم إلى تنفيذ خطوات إضافية أو الإجابة عن أي أسئلة أثناء التثبيت.
 
@@ -50,7 +50,7 @@ dpkg -i /tmp/dreambox-ntp-sync_1.1.0_all.deb
 systemctl daemon-reload
 systemctl enable --now dreambox-ntp-sync.timer
 systemctl start dreambox-ntp-sync.service
-systemctl restart enigma2
+reboot
 ```
 
 ## التحقق من التثبيت

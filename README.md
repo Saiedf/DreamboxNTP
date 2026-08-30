@@ -31,7 +31,7 @@ The installer automatically:
 - Reloads systemd and enables the synchronization timer.
 - Runs an immediate synchronization check.
 - Verifies the installed version and service.
-- Shows one installation-success message and restarts Enigma2 automatically.
+- Shows one installation-success message and reboots the receiver automatically.
 
 No additional installation steps or user input are required.
 
@@ -50,7 +50,7 @@ dpkg -i /tmp/dreambox-ntp-sync_1.1.0_all.deb
 systemctl daemon-reload
 systemctl enable --now dreambox-ntp-sync.timer
 systemctl start dreambox-ntp-sync.service
-systemctl restart enigma2
+reboot
 ```
 
 ## Verification

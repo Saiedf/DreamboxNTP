@@ -205,17 +205,8 @@ verify_installation() {
     return 0
 }
 
-show_success_message() {
-    say ''
-    say '============================================================='
-    say " $PLUGIN_TITLE installed successfully."
-    say " Version: $PLUGIN_VERSION"
-    say ' Automatic time synchronization is active.'
-    say ' Enigma2 will restart now.'
-    say '============================================================='
-    say ''
-
-    MESSAGE_TEXT="Dreambox%20NTP%20Sync%20$PLUGIN_VERSION%20installed%20successfully.%0AAutomatic%20time%20synchronization%20is%20active.%0AEnigma2%20will%20restart%20now."
+show_success_popup() {
+    MESSAGE_TEXT="Dreambox%20NTP%20Sync%20$PLUGIN_VERSION%20installed%20successfully.%0AAutomatic%20time%20synchronization%20is%20active.%0AThe%20receiver%20will%20reboot%20now."
     if have wget; then
         wget -qO- "http://127.0.0.1/web/message?text=$MESSAGE_TEXT&type=1&timeout=8" >/dev/null 2>&1
     elif have curl; then
@@ -229,19 +220,29 @@ show_success_message() {
             org.freedesktop.Notifications.Notify \
             string:"$PLUGIN_TITLE" uint32:0 string:"" \
             string:"Installation completed" \
-            string:"$PLUGIN_TITLE version $PLUGIN_VERSION installed successfully. Enigma2 will restart now." \
+            string:"$PLUGIN_TITLE version $PLUGIN_VERSION installed successfully. The receiver will reboot now." \
             array:string: dict:string:variant: int32:8000 >/dev/null 2>&1
     fi
     sleep 8
 }
 
-restart_enigma2() {
-    if have systemctl; then
-        systemctl restart enigma2
+show_success_table() {
+    say ''
+    say '============================================================='
+    printf '= %-57s =\n' 'INSTALLATION COMPLETED SUCCESSFULLY'
+    printf '= %-57s =\n' "Dreambox NTP Sync version $PLUGIN_VERSION is now active."
+    printf '= %-57s =\n' 'The receiver will reboot automatically in 5 seconds.'
+    say '============================================================='
+    say ''
+}
+
+reboot_receiver() {
+    sync
+    sleep 5
+    if [ -d /run/systemd/system ] && have systemctl; then
+        systemctl reboot || reboot
     else
-        init 4
-        sleep 4
-        init 3
+        reboot
     fi
 }
 
@@ -321,9 +322,8 @@ rm -f "$TEMP_PACKAGE" >/dev/null 2>&1
 sync
 
 say ''
-say '>>>> SUCCESSFULLY INSTALLED <<<<'
-show_success_message
-say '>>>> RESTARTING ENIGMA2    <<<<'
-restart_enigma2
+show_success_popup
+show_success_table
+reboot_receiver
 
 exit 0
