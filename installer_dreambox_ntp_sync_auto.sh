@@ -166,6 +166,7 @@ remove_version_1_0_traces() {
         /etc/rcS.d/S39dreambox-ntp-sync \
         /tmp/dreambox-ntp-sync.log \
         /tmp/dreambox-ntp-sync.lock \
+        /run/dreambox-ntp-sync.success \
         /tmp/dreambox-ntp-sync_1.0.0_all.deb
     do
         if [ -e "$OLD_FILE" ] || [ -L "$OLD_FILE" ]; then
@@ -226,9 +227,10 @@ verify_installation() {
 
     if [ -d /run/systemd/system ] && have systemctl; then
         systemctl daemon-reload || return 1
-        systemctl enable dreambox-ntp-sync.timer >/dev/null 2>&1 || return 1
-        systemctl restart dreambox-ntp-sync.timer || return 1
-        systemctl start dreambox-ntp-sync.service || true
+        systemctl is-enabled dreambox-ntp-sync.timer >/dev/null 2>&1 || \
+            systemctl enable dreambox-ntp-sync.timer >/dev/null 2>&1 || return 1
+        systemctl is-active dreambox-ntp-sync.timer >/dev/null 2>&1 || \
+            systemctl restart dreambox-ntp-sync.timer || return 1
     else
         /usr/bin/dreambox-ntp-sync --quick || true
     fi
